@@ -1,0 +1,20 @@
+{
+  "name": "sf-git-packager",
+  "version": "0.0.4",
+  "description": "CLI tool for building Salesforce.com package.xml files from git giffs",
+  "main": "index.js",
+  "bin": {
+    "sfpackage": "./index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "dlively",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "2.9.0",
+    "mkdirp": "0.5.1",
+    "xmlbuilder": "4.2.1"
+  }
+}
