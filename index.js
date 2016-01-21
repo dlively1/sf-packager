@@ -1,8 +1,14 @@
 #!/usr/bin/env node
  
 /**
- * Quick tool to parse git diff and build a package.xml file from it.
+ * CLI tool to parse git diff and build a package.xml file from it.
  * This is useful for using the MavensMate deployment tool and selecting the existing package.xml file
+ * Also used in larger orgs to avoid deploying all metadata in automated deployments
+ *
+ * usage:
+ *  $ sfpackage master featureBranch ./deploy/
+ *
+ *  This will create a file at ./deploy/featureBranch/unpackaged/package.xml
  */
  
 var program = require('commander');
@@ -10,12 +16,12 @@ var util  = require('util'),
     spawn = require('child_process').spawn,
     packageWriter = require('./lib/metaUtils').packageWriter,
     buildPackageDir = require('./lib/metaUtils').buildPackageDir,
-    packageInfo = require('./package.json')
+    packageVersion = require('./package.json').version;
 
  
 program
-	.arguments('<compare> <branch> <target>')
-  	.version(packageInfo.version)
+	.arguments('<compare> <branch> [target]')
+  	.version(packageVersion)
   	.option('-d, --dryrun', 'Only print the package.xml that would be generated')
   	.action(function(compare, branch, target) {
 
@@ -28,6 +34,12 @@ program
       var dryrun = false;
       if(program.dryrun) {
         dryrun = true;
+      }
+
+      if(! dryrun && ! program.target) {
+        console.error('target required when not dry-run');
+        program.help();
+        process.exit(1);
       }
 
     	var gitDiff = spawn('git', ['diff','--name-only', compare, branch]);
