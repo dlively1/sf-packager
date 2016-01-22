@@ -36,7 +36,7 @@ program
         dryrun = true;
       }
 
-      if(! dryrun && ! program.target) {
+      if(! dryrun && ! target) {
         console.error('target required when not dry-run');
         program.help();
         process.exit(1);
