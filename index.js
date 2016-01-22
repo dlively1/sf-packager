@@ -60,7 +60,11 @@ program
     				if(! metaBag.hasOwnProperty(parts[1])) {
     					metaBag[parts[1]] = [];
     				}
-    				metaBag[parts[1]].push(parts[2].split('.')[0]);
+            var meta = parts[2].split('.')[0];
+            if(metaBag[parts[1]].indexOf(meta) === -1) {
+              metaBag[parts[1]].push(meta);  
+            }
+    				
     			}
 
 
