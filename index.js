@@ -16,6 +16,7 @@ var util = require('util'),
     spawn = require('child_process').spawn,
     packageWriter = require('./lib/metaUtils').packageWriter,
     buildPackageDir = require('./lib/metaUtils').buildPackageDir,
+    copyFiles = require('./lib/metaUtils').copyFiles,
     packageVersion = require('./package.json').version;
 
 
@@ -42,6 +43,7 @@ program
             process.exit(1);
         }
 
+        var currentDir = process.cwd();
         var gitDiff = spawn('git', ['diff', '--name-only', compare, branch]);
         gitDiff.stdout.on('data', function (data) {
 
@@ -80,13 +82,14 @@ program
             console.log('building in dir %s', target);
 
             // /buildPackageDir = function (dirName, name, metadata, packgeXML, cb)
-            buildPackageDir(target, branch, metaBag, packageXML, (err, data) => {
+            buildPackageDir(target, branch, metaBag, packageXML, (err, buildDir) => {
 
                 if (err) {
                     return console.error(err);
                 }
 
-                console.log('Successfully created package.xml');
+                copyFiles(currentDir, buildDir, fileList);
+                console.log('Successfully created package at %s/package.xml',buildDir);
 
             });
 
