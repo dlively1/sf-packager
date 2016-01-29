@@ -81,7 +81,6 @@ program
 
             console.log('building in dir %s', target);
 
-            // /buildPackageDir = function (dirName, name, metadata, packgeXML, cb)
             buildPackageDir(target, branch, metaBag, packageXML, (err, buildDir) => {
 
                 if (err) {
