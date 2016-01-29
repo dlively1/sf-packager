@@ -11,7 +11,7 @@ git clone https://github.com/dlively1/sf-packager.git && cd sf-packager && npm l
 ```
 $ sfpackage master featureBranch ./deploy/
 ```
-This will create a file at ./deploy/featureBranch/unpackaged/package.xml
+This will create a package at ./deploy/featureBranch/unpackaged/package.xml
 
 
 You can also just write to any file you want
