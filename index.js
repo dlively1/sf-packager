@@ -57,11 +57,19 @@ program
             fileList = files.split('\n');
             fileList.forEach(function (fileName) {
 
-                if (fileName) {
+                //ensure file is inside of src directory of project
+                if (fileName && fileName.substring(0,3) === 'src') {
+
+                    //ignore changes to the package.xml file
+                    if(fileName === 'src/package.xml') {
+                        return;
+                    }
+
                     var parts = fileName.split('/');
                     if (!metaBag.hasOwnProperty(parts[1])) {
                         metaBag[parts[1]] = [];
                     }
+
                     var meta = parts[2].split('.')[0];
                     if (metaBag[parts[1]].indexOf(meta) === -1) {
                         metaBag[parts[1]].push(meta);
@@ -88,7 +96,7 @@ program
                 }
 
                 copyFiles(currentDir, buildDir, fileList);
-                console.log('Successfully created package at %s/package.xml',buildDir);
+                console.log('Successfully created package package.xml in %s',buildDir);
 
             });
 
@@ -102,6 +110,3 @@ program
 
 
 program.parse(process.argv);
- 
-
-
