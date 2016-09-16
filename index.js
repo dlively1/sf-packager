@@ -55,7 +55,7 @@ program
             var metaBag = {};
 
             fileList = files.split('\n');
-            fileList.forEach(function (fileName) {
+            fileList.forEach(function (fileName, index) {
 
                 //ensure file is inside of src directory of project
                 if (fileName && fileName.substring(0,3) === 'src') {
@@ -76,8 +76,10 @@ program
                     }
 
                 }
-
-
+                // remove files not in src so not copied
+                else {
+                    fileList.splice(index, 1);
+                }
             });
 
             //build package.xml file
