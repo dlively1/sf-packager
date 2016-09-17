@@ -49,6 +49,7 @@ program
 
             var buff = new Buffer(data),
                 files = buff.toString('utf8'),
+                fileListForCopy = [],
                 fileList = [];
 
             //defines the different member types
@@ -65,6 +66,9 @@ program
                         return;
                     }
 
+                    // add filename to array to be copied
+                    fileListForCopy.push(fileName);
+
                     var parts = fileName.split('/');
                     if (!metaBag.hasOwnProperty(parts[1])) {
                         metaBag[parts[1]] = [];
@@ -75,10 +79,6 @@ program
                         metaBag[parts[1]].push(meta);
                     }
 
-                }
-                // remove files not in src so not copied
-                else {
-                    fileList.splice(index, 1);
                 }
             });
 
@@ -97,7 +97,7 @@ program
                     return console.error(err);
                 }
 
-                copyFiles(currentDir, buildDir, fileList);
+                copyFiles(currentDir, buildDir, fileListForCopy);
                 console.log('Successfully created package package.xml in %s',buildDir);
 
             });
