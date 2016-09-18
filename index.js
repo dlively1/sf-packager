@@ -54,6 +54,8 @@ program
 
             //defines the different member types
             var metaBag = {};
+            var metaBagDestructive = {};
+            var isDestructive = false;
 
             fileList = files.split('\n');
             fileList.forEach(function (fileName, index) {
@@ -74,6 +76,7 @@ program
                     if (operation === 'A' || operation === 'M') {
                         // file was added or modified
                         // add fileName to array for unpackaged and to be copied
+                        console.log('File was added or modified: %s', fileName);
                         fileListForCopy.push(fileName);
 
                         var parts = fileName.split('/');
@@ -85,30 +88,60 @@ program
                         if (metaBag[parts[1]].indexOf(meta) === -1) {
                             metaBag[parts[1]].push(meta);
                         }
+                    } else if (operation === 'D') {
+                        // file was deleted
+                        console.log('File was deleted: %s', fileName);
+                        isDestructive = true;
+
+                        var parts = fileName.split('/');
+                        if (!metaBagDestructive.hasOwnProperty(parts[1])) {
+                            metaBagDestructive[parts[1]] = [];
+                        }
+
+                        var meta = parts[2].split('.')[0];
+                        if (metaBagDestructive[parts[1]].indexOf(meta) === -1) {
+                            metaBagDestructive[parts[1]].push(meta);
+                        }
+                    } else {
+                        // situation that requires review
+                        return console.error('Operation on file needs review: %s', fileName);
                     }
                 }
             });
 
-            //build package.xml file
+            //build package file content
             var packageXML = packageWriter(metaBag);
+            //build destructiveChanges file content
+            var destructiveXML = packageWriter(metaBagDestructive);
             if (dryrun) {
                 console.log(packageXML);
+                console.log(destructiveXML);
                 process.exit(0);
             }
 
             console.log('building in dir %s', target);
 
-            buildPackageDir(target, branch, metaBag, packageXML, (err, buildDir) => {
+            buildPackageDir(target, branch, metaBag, packageXML, false, (err, buildDir) => {
 
                 if (err) {
                     return console.error(err);
                 }
 
                 copyFiles(currentDir, buildDir, fileListForCopy);
-                console.log('Successfully created package package.xml in %s',buildDir);
+                console.log('Successfully created package.xml and files in %s',buildDir);
 
             });
 
+            if (isDestructive) {
+                buildPackageDir(target, branch, metaBagDestructive, destructiveXML, true, (err, buildDir) => {
+
+                    if (err) {
+                        return console.error(err);
+                    }
+
+                    console.log('Successfully created destructiveChanges.xml in %s',buildDir);
+                });
+            }
 
         });
         gitDiff.stderr.on('data', function (data) {
