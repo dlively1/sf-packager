@@ -44,7 +44,7 @@ program
         }
 
         var currentDir = process.cwd();
-        var gitDiff = spawn('git', ['diff', '--name-only', compare, branch]);
+        var gitDiff = spawn('git', ['diff', '--name-status', compare, branch]);
         gitDiff.stdout.on('data', function (data) {
 
             var buff = new Buffer(data),
@@ -58,6 +58,11 @@ program
             fileList = files.split('\n');
             fileList.forEach(function (fileName, index) {
 
+                // get the git operation
+                var operation = fileName.slice(0,1);
+                // remove the operation and spaces from fileName
+                fileName = fileName.slice(1).trim();
+
                 //ensure file is inside of src directory of project
                 if (fileName && fileName.substring(0,3) === 'src') {
 
@@ -66,19 +71,21 @@ program
                         return;
                     }
 
-                    // add filename to array to be copied
-                    fileListForCopy.push(fileName);
+                    if (operation === 'A' || operation === 'M') {
+                        // file was added or modified
+                        // add fileName to array for unpackaged and to be copied
+                        fileListForCopy.push(fileName);
 
-                    var parts = fileName.split('/');
-                    if (!metaBag.hasOwnProperty(parts[1])) {
-                        metaBag[parts[1]] = [];
+                        var parts = fileName.split('/');
+                        if (!metaBag.hasOwnProperty(parts[1])) {
+                            metaBag[parts[1]] = [];
+                        }
+
+                        var meta = parts[2].split('.')[0];
+                        if (metaBag[parts[1]].indexOf(meta) === -1) {
+                            metaBag[parts[1]].push(meta);
+                        }
                     }
-
-                    var meta = parts[2].split('.')[0];
-                    if (metaBag[parts[1]].indexOf(meta) === -1) {
-                        metaBag[parts[1]].push(meta);
-                    }
-
                 }
             });
 
