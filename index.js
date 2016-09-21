@@ -70,6 +70,11 @@ program
                         metaBag[parts[1]] = [];
                     }
 
+                    if (parts[2] === undefined) {
+                        console.error('File name "%s" cannot be processed, likely too many files in diff, exiting', fileName);
+                        process.exit(1);
+                    }
+
                     var meta = parts[2].split('.')[0];
                     if (metaBag[parts[1]].indexOf(meta) === -1) {
                         metaBag[parts[1]].push(meta);
