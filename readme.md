@@ -11,8 +11,9 @@ git clone https://github.com/dlively1/sf-packager.git && cd sf-packager && npm l
 ```
 $ sfpackage master featureBranch ./deploy/
 ```
-This will create a package at ./deploy/featureBranch/unpackaged/package.xml copying all files into directory
-Also if any deletes occurred will create a file at ./deploy/featureBranch/destructive/destructiveChanges.xml
+This will create a package at ./deploy/featureBranch/unpackaged/package.xml copying all files into directory.
+
+If any deletes occurred will also create ./deploy/featureBranch/destructive/destructiveChanges.xml
 
 
 You can also just write the package.xml and destructiveChanges.xml by passing the -d flag
