@@ -9,6 +9,8 @@
  *  $ sfpackage master featureBranch ./deploy/
  *
  *  This will create a file at ./deploy/featureBranch/unpackaged/package.xml
+ *  and copy each metadata item into a matching folder.
+ *  Also if any deletes occurred it will create a file at ./deploy/featureBranch/destructive/destructiveChanges.xml
  */
 
 var program = require('commander');
@@ -23,7 +25,7 @@ var util = require('util'),
 program
     .arguments('<compare> <branch> [target]')
     .version(packageVersion)
-    .option('-d, --dryrun', 'Only print the package.xml that would be generated')
+    .option('-d, --dryrun', 'Only print the package.xml and destructiveChanges.xml that would be generated')
     .action(function (compare, branch, target) {
 
         if (!branch || !compare) {
@@ -55,7 +57,7 @@ program
             //defines the different member types
             var metaBag = {};
             var metaBagDestructive = {};
-            var isDestructive = false;
+            var deletesHaveOccurred = false;
 
             fileList = files.split('\n');
             fileList.forEach(function (fileName, index) {
@@ -91,7 +93,7 @@ program
                     } else if (operation === 'D') {
                         // file was deleted
                         console.log('File was deleted: %s', fileName);
-                        isDestructive = true;
+                        deletesHaveOccurred = true;
 
                         var parts = fileName.split('/');
                         if (!metaBagDestructive.hasOwnProperty(parts[1])) {
@@ -114,7 +116,9 @@ program
             //build destructiveChanges file content
             var destructiveXML = packageWriter(metaBagDestructive);
             if (dryrun) {
+                console.log('\npackage.xml\n');
                 console.log(packageXML);
+                console.log('\ndestructiveChanges.xml\n');
                 console.log(destructiveXML);
                 process.exit(0);
             }
@@ -132,7 +136,7 @@ program
 
             });
 
-            if (isDestructive) {
+            if (deletesHaveOccurred) {
                 buildPackageDir(target, branch, metaBagDestructive, destructiveXML, true, (err, buildDir) => {
 
                     if (err) {
