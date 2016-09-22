@@ -127,7 +127,7 @@ program
                 process.exit(0);
             }
 
-            console.log('building in dir %s', target);
+            console.log('Building in directory %s', target);
 
             buildPackageDir(target, branch, metaBag, packageXML, false, (err, buildDir) => {
 
