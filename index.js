@@ -75,18 +75,24 @@ program
                         return;
                     }
 
-                    if (operation === 'A' || operation === 'M') {
-                        // file was added or modified
-                        // add fileName to array for unpackaged and to be copied
-                        console.log('File was added or modified: %s', fileName);
-                        fileListForCopy.push(fileName);
-
+                    var parts = fileName.split('/');
+                    // Check for invalid fileName, likely due to data stream exceeding buffer size resulting in incomplete string
+                    // TODO: need a way to ensure that full fileNames are processed - increase buffer size??
                     if (parts[2] === undefined) {
                         console.error('File name "%s" cannot be processed, likely too many files in diff, exiting', fileName);
                         process.exit(1);
                     }
 
-                        var meta = parts[2].split('.')[0];
+                    var meta = parts[2].split('.')[0];
+                    if (operation === 'A' || operation === 'M') {
+                        // file was added or modified - add fileName to array for unpackaged and to be copied
+                        console.log('File was added or modified: %s', fileName);
+                        fileListForCopy.push(fileName);
+
+                        if (!metaBag.hasOwnProperty(parts[1])) {
+                            metaBag[parts[1]] = [];
+                        }
+
                         if (metaBag[parts[1]].indexOf(meta) === -1) {
                             metaBag[parts[1]].push(meta);
                         }
@@ -95,12 +101,10 @@ program
                         console.log('File was deleted: %s', fileName);
                         deletesHaveOccurred = true;
 
-                        var parts = fileName.split('/');
                         if (!metaBagDestructive.hasOwnProperty(parts[1])) {
                             metaBagDestructive[parts[1]] = [];
                         }
 
-                        var meta = parts[2].split('.')[0];
                         if (metaBagDestructive[parts[1]].indexOf(meta) === -1) {
                             metaBagDestructive[parts[1]].push(meta);
                         }
