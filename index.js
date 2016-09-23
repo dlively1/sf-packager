@@ -44,7 +44,7 @@ program
         }
 
         var currentDir = process.cwd();
-        var gitDiff = spawn('git', ['diff', '--name-only', compare, branch]);
+        var gitDiff = spawn('git', ['--no-pager diff', '--name-status', compare, branch]);
         gitDiff.stdout.on('data', function (data) {
 
             var buff = new Buffer(data),
