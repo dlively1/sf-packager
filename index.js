@@ -13,7 +13,7 @@
 
 var program = require('commander');
 var util = require('util'),
-    spawn = require('child_process').spawn,
+    spawnSync = require('child_process').spawnSync,
     packageWriter = require('./lib/metaUtils').packageWriter,
     buildPackageDir = require('./lib/metaUtils').buildPackageDir,
     copyFiles = require('./lib/metaUtils').copyFiles,
@@ -44,74 +44,74 @@ program
         }
 
         var currentDir = process.cwd();
-        var gitDiff = spawn('git', ['--no-pager diff', '--name-status', compare, branch]);
-        gitDiff.stdout.on('data', function (data) {
+        const gitDiff = spawnSync('git', ['--no-pager', 'diff', '--name-only', compare, branch]);
+        var gitDiffStdOut = gitDiff.stdout.toString('utf8');
+        var gitDiffStdErr = gitDiff.stderr.toString('utf8');
 
-            var buff = new Buffer(data),
-                files = buff.toString('utf8'),
-                fileList = [];
+        if (gitDiffStdErr) {
+            console.error('An error has occurred: %s', gitDiffStdErr);
+            process.exit(1);
+        }
 
-            //defines the different member types
-            var metaBag = {};
+        var fileList = [];
 
-            fileList = files.split('\n');
-            fileList.forEach(function (fileName) {
+        //defines the different member types
+        var metaBag = {};
 
-                //ensure file is inside of src directory of project
-                if (fileName && fileName.substring(0,3) === 'src') {
+        fileList = gitDiffStdOut.split('\n');
+        fileList.forEach(function (fileName) {
 
-                    //ignore changes to the package.xml file
-                    if(fileName === 'src/package.xml') {
-                        return;
-                    }
+            //ensure file is inside of src directory of project
+            if (fileName && fileName.substring(0,3) === 'src') {
 
-                    var parts = fileName.split('/');
-                    if (!metaBag.hasOwnProperty(parts[1])) {
-                        metaBag[parts[1]] = [];
-                    }
-
-                    if (parts[2] === undefined) {
-                        console.error('File name "%s" cannot be processed, likely too many files in diff, exiting', fileName);
-                        process.exit(1);
-                    }
-
-                    var meta = parts[2].split('.')[0];
-                    if (metaBag[parts[1]].indexOf(meta) === -1) {
-                        metaBag[parts[1]].push(meta);
-                    }
-
+                //ignore changes to the package.xml file
+                if(fileName === 'src/package.xml') {
+                    return;
                 }
 
+                var parts = fileName.split('/');
+                if (!metaBag.hasOwnProperty(parts[1])) {
+                    metaBag[parts[1]] = [];
+                }
 
-            });
+                if (parts[2] === undefined) {
+                    console.error('File name "%s" cannot be processed, likely too many files in diff, exiting', fileName);
+                    process.exit(1);
+                }
 
-            //build package.xml file
-            var packageXML = packageWriter(metaBag);
-            if (dryrun) {
-                console.log(packageXML);
-                process.exit(0);
+                var meta = parts[2].split('.')[0];
+                if (metaBag[parts[1]].indexOf(meta) === -1) {
+                    metaBag[parts[1]].push(meta);
+                }
+
             }
 
-            console.log('building in dir %s', target);
-
-            buildPackageDir(target, branch, metaBag, packageXML, (err, buildDir) => {
-
-                if (err) {
-                    return console.error(err);
-                }
-
-                copyFiles(currentDir, buildDir, fileList);
-                console.log('Successfully created package package.xml in %s',buildDir);
-
-            });
-
 
         });
-        gitDiff.stderr.on('data', function (data) {
-            console.error('stderror:: ' + data);
+
+        //build package.xml file
+        var packageXML = packageWriter(metaBag);
+        if (dryrun) {
+            console.log(packageXML);
+            process.exit(0);
+        }
+
+        console.log('building in dir %s', target);
+
+        buildPackageDir(target, branch, metaBag, packageXML, (err, buildDir) => {
+
+            if (err) {
+                return console.error(err);
+            }
+
+            copyFiles(currentDir, buildDir, fileList);
+            console.log('Successfully created package package.xml in %s',buildDir);
+
         });
+
 
     });
+
 
 
 program.parse(process.argv);
