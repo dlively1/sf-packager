@@ -15,7 +15,7 @@
 
 var program = require('commander');
 var util = require('util'),
-    spawn = require('child_process').spawn,
+    spawnSync = require('child_process').spawnSync,
     packageWriter = require('./lib/metaUtils').packageWriter,
     buildPackageDir = require('./lib/metaUtils').buildPackageDir,
     copyFiles = require('./lib/metaUtils').copyFiles,
@@ -46,117 +46,114 @@ program
         }
 
         var currentDir = process.cwd();
-        var gitDiff = spawn('git', ['--no-pager diff', '--name-status', compare, branch]);
-        gitDiff.stdout.on('data', function (data) {
+        const gitDiff = spawnSync('git', ['--no-pager', 'diff', '--name-status', compare, branch]);
+        var gitDiffStdOut = gitDiff.stdout.toString('utf8');
+        var gitDiffStdErr = gitDiff.stderr.toString('utf8');
 
-            var buff = new Buffer(data),
-                files = buff.toString('utf8'),
-                fileListForCopy = [],
-                fileList = [];
+        if (gitDiffStdErr) {
+            console.error('An error has occurred: %s', gitDiffStdErr);
+            process.exit(1);
+        }
 
-            //defines the different member types
-            var metaBag = {};
-            var metaBagDestructive = {};
-            var deletesHaveOccurred = false;
+        var fileListForCopy = [],
+            fileList = [];
 
-            fileList = files.split('\n');
-            fileList.forEach(function (fileName, index) {
+        //defines the different member types
+        var metaBag = {};
+        var metaBagDestructive = {};
+        var deletesHaveOccurred = false;
 
-                // get the git operation
-                var operation = fileName.slice(0,1);
-                // remove the operation and spaces from fileName
-                fileName = fileName.slice(1).trim();
+        fileList = gitDiffStdOut.split('\n');
+        fileList.forEach(function (fileName, index) {
 
-                //ensure file is inside of src directory of project
-                if (fileName && fileName.substring(0,3) === 'src') {
+            // get the git operation
+            var operation = fileName.slice(0,1);
+            // remove the operation and spaces from fileName
+            fileName = fileName.slice(1).trim();
 
-                    //ignore changes to the package.xml file
-                    if(fileName === 'src/package.xml') {
-                        return;
-                    }
+            //ensure file is inside of src directory of project
+            if (fileName && fileName.substring(0,3) === 'src') {
 
-                    var parts = fileName.split('/');
-                    // Check for invalid fileName, likely due to data stream exceeding buffer size resulting in incomplete string
-                    // TODO: need a way to ensure that full fileNames are processed - increase buffer size??
-                    if (parts[2] === undefined) {
-                        console.error('File name "%s" cannot be processed, likely too many files in diff, exiting', fileName);
-                        process.exit(1);
-                    }
-
-                    var meta = parts[2].split('.')[0];
-                    if (operation === 'A' || operation === 'M') {
-                        // file was added or modified - add fileName to array for unpackaged and to be copied
-                        console.log('File was added or modified: %s', fileName);
-                        fileListForCopy.push(fileName);
-
-                        if (!metaBag.hasOwnProperty(parts[1])) {
-                            metaBag[parts[1]] = [];
-                        }
-
-                        if (metaBag[parts[1]].indexOf(meta) === -1) {
-                            metaBag[parts[1]].push(meta);
-                        }
-                    } else if (operation === 'D') {
-                        // file was deleted
-                        console.log('File was deleted: %s', fileName);
-                        deletesHaveOccurred = true;
-
-                        if (!metaBagDestructive.hasOwnProperty(parts[1])) {
-                            metaBagDestructive[parts[1]] = [];
-                        }
-
-                        if (metaBagDestructive[parts[1]].indexOf(meta) === -1) {
-                            metaBagDestructive[parts[1]].push(meta);
-                        }
-                    } else {
-                        // situation that requires review
-                        return console.error('Operation on file needs review: %s', fileName);
-                    }
+                //ignore changes to the package.xml file
+                if(fileName === 'src/package.xml') {
+                    return;
                 }
-            });
 
-            //build package file content
-            var packageXML = packageWriter(metaBag);
-            //build destructiveChanges file content
-            var destructiveXML = packageWriter(metaBagDestructive);
-            if (dryrun) {
-                console.log('\npackage.xml\n');
-                console.log(packageXML);
-                console.log('\ndestructiveChanges.xml\n');
-                console.log(destructiveXML);
-                process.exit(0);
+                var parts = fileName.split('/');
+                // Check for invalid fileName, likely due to data stream exceeding buffer size resulting in incomplete string
+                // TODO: need a way to ensure that full fileNames are processed - increase buffer size??
+                if (parts[2] === undefined) {
+                    console.error('File name "%s" cannot be processed, exiting', fileName);
+                    process.exit(1);
+                }
+
+                var meta = parts[2].split('.')[0];
+                if (operation === 'A' || operation === 'M') {
+                    // file was added or modified - add fileName to array for unpackaged and to be copied
+                    console.log('File was added or modified: %s', fileName);
+                    fileListForCopy.push(fileName);
+
+                    if (!metaBag.hasOwnProperty(parts[1])) {
+                        metaBag[parts[1]] = [];
+                    }
+
+                    if (metaBag[parts[1]].indexOf(meta) === -1) {
+                        metaBag[parts[1]].push(meta);
+                    }
+                } else if (operation === 'D') {
+                    // file was deleted
+                    console.log('File was deleted: %s', fileName);
+                    deletesHaveOccurred = true;
+
+                    if (!metaBagDestructive.hasOwnProperty(parts[1])) {
+                        metaBagDestructive[parts[1]] = [];
+                    }
+
+                    if (metaBagDestructive[parts[1]].indexOf(meta) === -1) {
+                        metaBagDestructive[parts[1]].push(meta);
+                    }
+                } else {
+                    // situation that requires review
+                    return console.error('Operation on file needs review: %s', fileName);
+                }
+            }
+        });
+
+        //build package file content
+        var packageXML = packageWriter(metaBag);
+        //build destructiveChanges file content
+        var destructiveXML = packageWriter(metaBagDestructive);
+        if (dryrun) {
+            console.log('\npackage.xml\n');
+            console.log(packageXML);
+            console.log('\ndestructiveChanges.xml\n');
+            console.log(destructiveXML);
+            process.exit(0);
+        }
+
+        console.log('Building in directory %s', target);
+
+        buildPackageDir(target, branch, metaBag, packageXML, false, (err, buildDir) => {
+
+            if (err) {
+                return console.error(err);
             }
 
-            console.log('Building in directory %s', target);
+            copyFiles(currentDir, buildDir, fileListForCopy);
+            console.log('Successfully created package.xml and files in %s',buildDir);
 
-            buildPackageDir(target, branch, metaBag, packageXML, false, (err, buildDir) => {
+        });
+
+        if (deletesHaveOccurred) {
+            buildPackageDir(target, branch, metaBagDestructive, destructiveXML, true, (err, buildDir) => {
 
                 if (err) {
                     return console.error(err);
                 }
 
-                copyFiles(currentDir, buildDir, fileListForCopy);
-                console.log('Successfully created package.xml and files in %s',buildDir);
-
+                console.log('Successfully created destructiveChanges.xml in %s',buildDir);
             });
-
-            if (deletesHaveOccurred) {
-                buildPackageDir(target, branch, metaBagDestructive, destructiveXML, true, (err, buildDir) => {
-
-                    if (err) {
-                        return console.error(err);
-                    }
-
-                    console.log('Successfully created destructiveChanges.xml in %s',buildDir);
-                });
-            }
-
-        });
-        gitDiff.stderr.on('data', function (data) {
-            console.error('stderror:: ' + data);
-        });
-
+        }
     });
-
 
 program.parse(process.argv);
