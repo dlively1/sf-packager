@@ -87,7 +87,16 @@ program
                     process.exit(1);
                 }
 
-                var meta = parts[2].split('.')[0];
+                var meta;
+
+                if (parts.length === 4) {
+                    // Processing metadata with nested folders e.g. emails, documents, reports
+                    meta = parts[2] + '/' + parts[3].split('.')[0];
+                } else {
+                    // Processing metadata without nested folders. Strip -meta from the end.
+                    meta = parts[2].split('.')[0].replace('-meta', '');
+                }
+
                 if (operation === 'A' || operation === 'M') {
                     // file was added or modified - add fileName to array for unpackaged and to be copied
                     console.log('File was added or modified: %s', fileName);
