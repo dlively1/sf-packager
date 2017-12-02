@@ -19,6 +19,7 @@ var util = require('util'),
     packageWriter = require('./lib/metaUtils').packageWriter,
     buildPackageDir = require('./lib/metaUtils').buildPackageDir,
     copyFiles = require('./lib/metaUtils').copyFiles,
+    fs = require('fs'),
     packageVersion = require('./package.json').version;
 
 
@@ -99,15 +100,31 @@ program
 
                 if (operation === 'A' || operation === 'M') {
                     // file was added or modified - add fileName to array for unpackaged and to be copied
-                    console.log('File was added or modified: %s', fileName);
-                    fileListForCopy.push(fileName);
+                    // ant migration tool requires the whole lightning bundle to be included, even if only
+                    // one of the bundle components change.
+                    if (parts[1] === 'aura') {
+                        var bundle = fs.readdirSync(parts[0]+'/'+parts[1]+'/'+parts[2]);
+                        console.log('File was added or modified in a lightning bundle: %s', fileName);
+                        bundle.forEach(function (fileName, index) {
+                            fileListForCopy.push(parts[0]+'/'+parts[1]+'/'+parts[2]+'/'+fileName);
+                        });
+                    } else {                        
+                        console.log('File was added or modified: %s', fileName);
+                        fileListForCopy.push(fileName);
+                    }
 
                     if (!metaBag.hasOwnProperty(parts[1])) {
                         metaBag[parts[1]] = [];
                     }
 
-                    if (metaBag[parts[1]].indexOf(meta) === -1) {
-                        metaBag[parts[1]].push(meta);
+                    if (parts[1] === 'aura') {
+                        if (metaBag[parts[1]].indexOf('*') === -1) {
+                            metaBag[parts[1]].push('*');
+                        }
+                    } else {
+                        if (metaBag[parts[1]].indexOf(meta) === -1) {
+                            metaBag[parts[1]].push(meta);
+                        }
                     }
                 } else if (operation === 'D') {
                     // file was deleted
