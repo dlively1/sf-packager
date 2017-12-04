@@ -144,8 +144,6 @@ program
                     // situation that requires review
                     return console.error('Operation on file needs review: %s', fileName);
                 }
-            } else {
-                console.log(fileName + ' is busted');
             }
         });
 
