@@ -65,12 +65,14 @@ program
         var deletesHaveOccurred = false;
 
         fileList = gitDiffStdOut.split('\n');
-        fileList.forEach(function (fileName, index) {
+        fileList.forEach(function (gitDiffLine, index) {
 
             // get the git operation
-            var operation = fileName.slice(0,1);
-            // remove the operation and spaces from fileName
-            fileName = fileName.slice(1).trim();
+            var operation = gitDiffLine.slice(0,1);
+            // separate the giDiffLine into its various components
+            var gitDiffLineParts = gitDiffLine.split('\t');
+
+            var fileName = gitDiffLineParts[gitDiffLineParts.length -1];
 
             //ensure file is inside of src directory of project
             if (fileName && fileName.substring(0,3) === 'src') {
@@ -98,7 +100,7 @@ program
                     meta = parts[2].split('.')[0].replace('-meta', '');
                 }
 
-                if (operation === 'A' || operation === 'M') {
+                if (operation === 'A' || operation === 'M' || operation === 'R') {
                     // file was added or modified - add fileName to array for unpackaged and to be copied
                     // ant migration tool requires the whole lightning bundle to be included, even if only
                     // one of the bundle components change.
