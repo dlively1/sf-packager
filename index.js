@@ -26,6 +26,7 @@ program
     .arguments('<compare> <branch> [target]')
     .version(packageVersion)
     .option('-d, --dryrun', 'Only print the package.xml and destructiveChanges.xml that would be generated')
+    .option('-p, --pversion [version]', 'Salesforce version of the package.xml', parseInt)
     .action(function (compare, branch, target) {
 
         if (!branch || !compare) {
@@ -129,9 +130,9 @@ program
         });
 
         //build package file content
-        var packageXML = packageWriter(metaBag);
+        var packageXML = packageWriter(metaBag, program.pversion);
         //build destructiveChanges file content
-        var destructiveXML = packageWriter(metaBagDestructive);
+        var destructiveXML = packageWriter(metaBagDestructive, program.pversion);
         if (dryrun) {
             console.log('\npackage.xml\n');
             console.log(packageXML);
