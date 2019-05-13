@@ -16,6 +16,6 @@
     "commander": "2.9.0",
     "fs-extra": "0.26.5",
     "mkdirp": "0.5.1",
-    "xmlbuilder": "4.2.1"
+    "xmlbuilder": "13.0.1"
   }
 }
