@@ -5,7 +5,7 @@ CLI Tool to generate Salesforce.com package.xml (and destructiveChange.xml) file
 ## Install
 
 ```
-git clone https://github.com/dlively1/sf-packager.git && cd sf-packager && npm link
+npm install -g sf-packager
 ```
 
 ## Usage
