@@ -12,21 +12,19 @@
  *  and copy each metadata item into a matching folder.
  *  Also if any deletes occurred it will create a file at ./deploy/featureBranch/destructive/destructiveChanges.xml
  */
-
-var program = require('commander');
-var util = require('util'),
-    spawnSync = require('child_process').spawnSync,
-    packageWriter = require('./lib/metaUtils').packageWriter,
-    buildPackageDir = require('./lib/metaUtils').buildPackageDir,
-    copyFiles = require('./lib/metaUtils').copyFiles,
-    fs = require('fs'),
-    packageVersion = require('./package.json').version;
-
+const program = require('commander');
+const spawnSync = require('child_process').spawnSync;
+const packageWriter = require('./lib/metaUtils').packageWriter;
+const buildPackageDir = require('./lib/metaUtils').buildPackageDir;
+const copyFiles = require('./lib/metaUtils').copyFiles;
+const fs = require('fs');
+const packageVersion = require('./package.json').version;
 
 program
     .arguments('<compare> <branch> [target]')
     .version(packageVersion)
     .option('-d, --dryrun', 'Only print the package.xml and destructiveChanges.xml that would be generated')
+    .option('-p, --pversion [version]', 'Salesforce version of the package.xml', parseInt)
     .action(function (compare, branch, target) {
 
         if (!branch || !compare) {
@@ -35,10 +33,7 @@ program
             process.exit(1);
         }
 
-        var dryrun = false;
-        if (program.dryrun) {
-            dryrun = true;
-        }
+        const dryrun = program.dryrun;
 
         if (!dryrun && !target) {
             console.error('target required when not dry-run');
@@ -46,33 +41,33 @@ program
             process.exit(1);
         }
 
-        var currentDir = process.cwd();
+        const currentDir = process.cwd();
         const gitDiff = spawnSync('git', ['--no-pager', 'diff', '--name-status', compare, branch]);
-        var gitDiffStdOut = gitDiff.stdout.toString('utf8');
-        var gitDiffStdErr = gitDiff.stderr.toString('utf8');
+        const gitDiffStdOut = gitDiff.stdout.toString();
+        const gitDiffStdErr = gitDiff.stderr.toString();
 
         if (gitDiffStdErr) {
             console.error('An error has occurred: %s', gitDiffStdErr);
             process.exit(1);
         }
 
-        var fileListForCopy = [],
-            fileList = [];
+        let fileListForCopy = [];
 
         //defines the different member types
-        var metaBag = {};
-        var metaBagDestructive = {};
-        var deletesHaveOccurred = false;
+        const metaBag = {};
+        const metaBagDestructive = {};
+        let deletesHaveOccurred = false;
 
-        fileList = gitDiffStdOut.split('\n');
-        fileList.forEach(function (gitDiffLine, index) {
+        const fileList = gitDiffStdOut.split('\n');
+        fileList.forEach(function (gitDiffLine) {
 
             // get the git operation
-            var operation = gitDiffLine.slice(0,1);
-            // separate the giDiffLine into its various components
-            var gitDiffLineParts = gitDiffLine.split('\t');
+            const operation = gitDiffLine.slice(0,1);
 
-            var fileName = gitDiffLineParts[gitDiffLineParts.length -1];
+            // separate the giDiffLine into its various components
+            const gitDiffLineParts = gitDiffLine.split('\t');
+
+            const fileName = gitDiffLineParts[gitDiffLineParts.length -1];
 
             //ensure file is inside of src directory of project
             if (fileName && fileName.substring(0,3) === 'src') {
@@ -82,7 +77,7 @@ program
                     return;
                 }
 
-                var parts = fileName.split('/');
+                const parts = fileName.split('/');
                 // Check for invalid fileName, likely due to data stream exceeding buffer size resulting in incomplete string
                 // TODO: need a way to ensure that full fileNames are processed - increase buffer size??
                 if (parts[2] === undefined) {
@@ -90,7 +85,7 @@ program
                     process.exit(1);
                 }
 
-                var meta;
+                let meta;
 
                 if (parts.length === 4) {
                     // Processing metadata with nested folders e.g. emails, documents, reports
@@ -107,7 +102,7 @@ program
                     if (parts[1] === 'aura') {
                         var bundle = fs.readdirSync(parts[0]+'/'+parts[1]+'/'+parts[2]);
                         console.log('File was added or modified in a lightning bundle: %s', fileName);
-                        bundle.forEach(function (fileName, index) {
+                        bundle.forEach(function (fileName) {
                             fileListForCopy.push(parts[0]+'/'+parts[1]+'/'+parts[2]+'/'+fileName);
                         });
                     } else {                        
@@ -147,10 +142,10 @@ program
             }
         });
 
-        //build package file content
-        var packageXML = packageWriter(metaBag);
-        //build destructiveChanges file content
-        var destructiveXML = packageWriter(metaBagDestructive);
+        // build package file content
+        const packageXML = packageWriter(metaBag, program.pversion);
+        // build destructiveChanges file content
+        const destructiveXML = packageWriter(metaBagDestructive, program.pversion);
         if (dryrun) {
             console.log('\npackage.xml\n');
             console.log(packageXML);
@@ -162,14 +157,12 @@ program
         console.log('Building in directory %s', target);
 
         buildPackageDir(target, branch, metaBag, packageXML, false, (err, buildDir) => {
-
             if (err) {
                 return console.error(err);
             }
 
             copyFiles(currentDir, buildDir, fileListForCopy);
             console.log('Successfully created package.xml and files in %s',buildDir);
-
         });
 
         if (deletesHaveOccurred) {

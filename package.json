@@ -1,21 +1,37 @@
 {
-  "name": "sf-git-packager",
-  "version": "0.0.5",
-  "description": "CLI tool for building Salesforce.com package.xml files from git giffs",
+  "name": "sf-packager",
+  "version": "0.10.1",
+  "description": "CLI tool for building Salesforce.com package.xml files from git diffs",
   "main": "index.js",
   "bin": {
     "sfpackage": "./index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "jshint ./",
+    "prepublishOnly": "npm run lint"
   },
-  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:dlively1/sf-packager.git"
+  },
+  "keywords": [
+    "salesforce",
+    "sfdc",
+    "git-diff",
+    "salesforce.com",
+    "force.com",
+    "ci"
+  ],
   "author": "dlively",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "commander": "2.9.0",
     "fs-extra": "0.26.5",
     "mkdirp": "0.5.1",
     "xmlbuilder": "4.2.1"
+  },
+  "devDependencies": {
+    "jshint": "^2.10.2"
   }
 }

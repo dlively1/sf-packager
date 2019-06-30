@@ -1,0 +1,20 @@
+{
+  "node": true,
+  "esversion": 6,
+  "bitwise": true,
+  "camelcase": true,
+  "curly": true,
+  "eqeqeq": true,
+  "immed": true,
+  "latedef": true,
+  "newcap": true,
+  "noarg": true,
+  "quotmark": "single",
+  "undef": true,
+  "unused": true,
+  "strict": false,
+  "trailing": true,
+  "smarttabs": false,
+  "onevar": false,
+  "varstmt": false
+}
