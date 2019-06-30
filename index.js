@@ -100,7 +100,7 @@ program
                     // ant migration tool requires the whole lightning bundle to be included, even if only
                     // one of the bundle components change.
                     if (parts[1] === 'aura') {
-                        var bundle = fs.readdirSync(parts[0]+'/'+parts[1]+'/'+parts[2]);
+                        const bundle = fs.readdirSync(parts[0]+'/'+parts[1]+'/'+parts[2]);
                         console.log('File was added or modified in a lightning bundle: %s', fileName);
                         bundle.forEach(function (fileName) {
                             fileListForCopy.push(parts[0]+'/'+parts[1]+'/'+parts[2]+'/'+fileName);
