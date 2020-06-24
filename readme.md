@@ -1,6 +1,6 @@
 # Overview
 
-CLI Tool to generate Salesforce.com package.xml (and destructiveChange.xml) files based on git diff between two branches. 
+CLI Tool to generate Salesforce.com package.xml (and destructiveChange.xml) files based on git diff between two branches, commits, or tags. 
 
 ## Install
 
