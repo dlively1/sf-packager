@@ -17,6 +17,7 @@ const spawnSync = require('child_process').spawnSync;
 const packageWriter = require('./lib/metaUtils').packageWriter;
 const buildPackageDir = require('./lib/metaUtils').buildPackageDir;
 const copyFiles = require('./lib/metaUtils').copyFiles;
+const fs = require('fs');
 const packageVersion = require('./package.json').version;
 
 program
@@ -58,12 +59,15 @@ program
         let deletesHaveOccurred = false;
 
         const fileList = gitDiffStdOut.split('\n');
-        fileList.forEach(function (fileName) {
+        fileList.forEach(function (gitDiffLine) {
 
             // get the git operation
-            const operation = fileName.slice(0,1);
-            // remove the operation and spaces from fileName
-            fileName = fileName.slice(1).trim();
+            const operation = gitDiffLine.slice(0,1);
+
+            // separate the giDiffLine into its various components
+            const gitDiffLineParts = gitDiffLine.split('\t');
+
+            const fileName = gitDiffLineParts[gitDiffLineParts.length -1];
 
             //ensure file is inside of src directory of project
             if (fileName && fileName.substring(0,3) === 'src') {
@@ -91,17 +95,33 @@ program
                     meta = parts[2].split('.')[0].replace('-meta', '');
                 }
 
-                if (operation === 'A' || operation === 'M') {
+                if (operation === 'A' || operation === 'M' || operation === 'R') {
                     // file was added or modified - add fileName to array for unpackaged and to be copied
-                    console.log('File was added or modified: %s', fileName);
-                    fileListForCopy.push(fileName);
+                    // ant migration tool requires the whole lightning bundle to be included, even if only
+                    // one of the bundle components change.
+                    if (parts[1] === 'aura') {
+                        const bundle = fs.readdirSync(parts[0]+'/'+parts[1]+'/'+parts[2]);
+                        console.log('File was added or modified in a lightning bundle: %s', fileName);
+                        bundle.forEach(function (fileName) {
+                            fileListForCopy.push(parts[0]+'/'+parts[1]+'/'+parts[2]+'/'+fileName);
+                        });
+                    } else {                        
+                        console.log('File was added or modified: %s', fileName);
+                        fileListForCopy.push(fileName);
+                    }
 
                     if (!metaBag.hasOwnProperty(parts[1])) {
                         metaBag[parts[1]] = [];
                     }
 
-                    if (metaBag[parts[1]].indexOf(meta) === -1) {
-                        metaBag[parts[1]].push(meta);
+                    if (parts[1] === 'aura') {
+                        if (metaBag[parts[1]].indexOf('*') === -1) {
+                            metaBag[parts[1]].push('*');
+                        }
+                    } else {
+                        if (metaBag[parts[1]].indexOf(meta) === -1) {
+                            metaBag[parts[1]].push(meta);
+                        }
                     }
                 } else if (operation === 'D') {
                     // file was deleted
