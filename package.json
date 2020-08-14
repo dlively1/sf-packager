@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "jshint ./",
+    "lint": "eslint ./",
     "prepublishOnly": "npm run lint"
   },
   "repository": {
@@ -32,6 +32,7 @@
     "xmlbuilder": "13.0.2"
   },
   "devDependencies": {
-    "jshint": "^2.10.2"
+    "eslint": "^7.3.1",
+    "eslint-plugin-import": "^2.21.2"
   }
 }
