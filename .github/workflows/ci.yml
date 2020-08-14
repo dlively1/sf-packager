@@ -25,3 +25,8 @@ jobs:
         npm run lint
       env:
         CI: true
+    - name: mocha tests
+      run:
+        npm test
+      env:
+        CI: true
