@@ -7,7 +7,7 @@
     "sfpackage": "./index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha",
     "lint": "eslint ./",
     "prepublishOnly": "npm run lint"
   },
@@ -33,6 +33,10 @@
   },
   "devDependencies": {
     "eslint": "^7.3.1",
-    "eslint-plugin-import": "^2.21.2"
+    "eslint-plugin-import": "^2.21.2",
+    "mocha": "^8.1.1"
+  },
+  "mocha": {
+    "spec": "test/**/*.spec.js"
   }
 }
