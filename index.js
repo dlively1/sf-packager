@@ -15,7 +15,7 @@
 const program = require('commander');
 const { spawnSync } = require('child_process');
 const fs = require('fs');
-const { packageWriter } = require('./lib/metaUtils');
+const { packageWriter } = require('./lib/packageWriter');
 const { buildPackageDir } = require('./lib/metaUtils');
 const { copyFiles } = require('./lib/metaUtils');
 const packageVersion = require('./package.json').version;
