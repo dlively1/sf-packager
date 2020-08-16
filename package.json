@@ -37,6 +37,6 @@
     "mocha": "^8.1.1"
   },
   "mocha": {
-    "spec": "test/**/*.spec.js"
+    "spec": "lib/*.spec.js"
   }
 }
