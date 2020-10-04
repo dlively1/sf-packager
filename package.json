@@ -29,9 +29,11 @@
     "commander": "5.1.0",
     "fs-extra": "9.0.1",
     "mkdirp": "0.5.1",
+    "process": "^0.11.10",
     "xmlbuilder": "13.0.2"
   },
   "devDependencies": {
+    "babel-eslint": "^10.1.0",
     "eslint": "^7.3.1",
     "eslint-plugin-import": "^2.21.2",
     "mocha": "^8.1.1"
