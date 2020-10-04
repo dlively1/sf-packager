@@ -14,7 +14,7 @@
  */
 const program = require('commander');
 const fs = require('fs');
-const {packageWriter, copyFiles, buildPackageDir, git} = require('./lib')
+const { sfdcPackage, metaUtils, git } = require('./lib')
 const packageVersion = require('./package.json').version;
 const console = require('console');
 const process = require('process');
@@ -123,9 +123,9 @@ program
         });
 
         // build package file content
-        const packageXML = packageWriter(metaBag, program.pversion);
+        const packageXML = sfdcPackage.writer(metaBag, program.pversion);
         // build destructiveChanges file content
-        const destructiveXML = packageWriter(metaBagDestructive, program.pversion);
+        const destructiveXML = sfdcPackage.writer(metaBagDestructive, program.pversion);
         if (dryrun) {
             console.log('\npackage.xml\n');
             console.log(packageXML);
@@ -136,17 +136,17 @@ program
 
         console.log('Building in directory %s', target);
 
-        buildPackageDir(target, branch, metaBag, packageXML, false, (err, buildDir) => {
+        metaUtils.buildPackageDir(target, branch, metaBag, packageXML, false, (err, buildDir) => {
             if (err) {
                 return console.error(err);
             }
 
-            copyFiles(process.cwd(), buildDir, fileListForCopy);
+            metaUtils.copyFiles(process.cwd(), buildDir, fileListForCopy);
             console.log('Successfully created package.xml and files in %s', buildDir);
         });
 
         if (deletesHaveOccurred) {
-            buildPackageDir(target, branch, metaBagDestructive, destructiveXML, true, (err, buildDir) => {
+            metaUtils.buildPackageDir(target, branch, metaBagDestructive, destructiveXML, true, (err, buildDir) => {
                 if (err) {
                     return console.error(err);
                 }
