@@ -13,7 +13,7 @@
  *  Also if any deletes occurred it will create a file at ./deploy/featureBranch/destructive/destructiveChanges.xml
  */
 const program = require('commander');
-const { sfdcPackage, metaUtils, git, parseDiff } = require('./lib')
+const { sfdcPackage, metaUtils, git, Logger } = require('./lib')
 const packageVersion = require('./package.json').version;
 const console = require('console');
 const process = require('process');
@@ -23,14 +23,9 @@ program
     .version(packageVersion)
     .option('-d, --dryrun', 'Only print the package.xml and destructiveChanges.xml that would be generated')
     .option('-p, --pversion [version]', 'Salesforce version of the package.xml', parseInt)
+    .option('--debug', 'enable debug output logging')
     .action((compare, branch, target) => {
-        if (!branch || !compare) {
-            console.error('branch and target branch are both required');
-            program.help();
-            process.exit(1);
-        }
-
-        const {dryrun} = program;
+        const {dryrun, debug} = program;
 
         if (!dryrun && !target) {
             console.error('target required when not dry-run');
@@ -38,8 +33,9 @@ program
             process.exit(1);
         }
 
+        const logger = new Logger(debug);
         const fileList = git.diff(compare, branch);
-        const {changedMetaBag, deletedMetaBag, changeList} = metaUtils.parseDiff(fileList);
+        const {changedMetaBag, deletedMetaBag, changeList} = metaUtils.parseDiff(fileList, logger);
 
         // build package file content
         const packageXML = sfdcPackage.writer(changedMetaBag, program.pversion);
@@ -53,7 +49,7 @@ program
             process.exit(0);
         }
 
-        console.log('Building in directory %s', target);
+        logger.debug(`Building in directory ${target}`)
 
         metaUtils
             .buildPackageDir(target, branch, changedMetaBag, packageXML)
